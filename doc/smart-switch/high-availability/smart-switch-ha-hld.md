@@ -419,6 +419,11 @@ To support HA, we will need to add new programs that communicates between multip
 
 This container will be running on NPU side, so when DPU is down, we can still drive the HA state machine transition properly and notify our upstream service about any state change.
 
+There will be one container per DPU. We use featured to management services of ha containers. Here is the high level design to manage the containers.
+* Feature hamgr will be added to the FEATURE table in config_db, where has_per_dpu_scope is set to true.
+* At boot time, featured gets hamgr feature from config_db and creates the number of services same as the number of DPUs.
+* The hamgr services call hamgr script and pass the dpu slot number [0 - 7]. hamgr script starts hamgr container and passes the slot number.
+* hamgr container starts swbusd and hamgrd with the dpu slot number as one of the arguments. The daemons get DPU configuration from DPU table in config_db. Using the slot number, it can find its own entry from the DPU table.
 ##### 5.2.1.2. swbusd
 
 `swbusd` is used for establish the connections between each switches:
